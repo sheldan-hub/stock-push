@@ -1,0 +1,32 @@
+name: 股票收盘微信推送
+
+on:
+  schedule:
+    # GitHub Actions 的 cron 使用 UTC 时间。
+    # 北京时间每天 23:30 = UTC 15:30；* 表示每天（含周末）。
+    - cron: '30 15 * * *'
+  workflow_dispatch: {}   # 允许在 Actions 页面手动点 “Run workflow” 测试
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install requests
+
+      - name: 抓取行情并推送到微信
+        env:
+          SENDKEY: ${{ secrets.SENDKEY }}       # 密钥：Server 酱 SendKey
+          STOCK_MARKET: ${{ vars.STOCK_MARKET }} # 变量：sh / sz / hk / us
+          STOCK_CODE: ${{ vars.STOCK_CODE }}     # 变量：如 600519 / BABA
+          STOCK_NAME: ${{ vars.STOCK_NAME }}     # 变量：显示名（可空）
+        run: python stock_push.py
